@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
-import 'pages/homepage.dart';
+import 'pages/home_page.dart';
 
-void main() {
-  runApp(MyApp());
-}
+void main() => runApp(const LangLensApp());
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class LangLensApp extends StatelessWidget {
+  const LangLensApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'LangLens',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          iconTheme: IconThemeData(color: Colors.black),
+        ),
       ),
-      home: HomeScreen(),
+      home: const HomePage(),
     );
   }
 }
