@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -28,7 +30,7 @@ class HomePage extends StatelessWidget {
           children: [
             _buildBannerSection(),
             const SizedBox(height: 30),
-            _buildActionButtons(),
+            _buildActionButtons(context),
           ],
         ),
       ),
@@ -49,19 +51,35 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(BuildContext context) {
     return Column(
       children: [
-        _customButton(Icons.camera_alt_outlined, 'Capture Image'),
+        _customButton(
+          icon: Icons.camera_alt_outlined,
+          text: 'Capture Image',
+          onPressed: () => _handleCameraAction(context),
+        ),
         const SizedBox(height: 15),
-        _customButton(Icons.upload_outlined, 'Upload Image'),
+        _customButton(
+          icon: Icons.upload_outlined,
+          text: 'Upload Image',
+          onPressed: () => _handleUploadAction(context),
+        ),
         const SizedBox(height: 15),
-        _customButton(Icons.translate, 'Text Translation'),
+        _customButton(
+          icon: Icons.translate,
+          text: 'Text Translation',
+          onPressed: () => _handleTextTranslation(context),
+        ),
       ],
     );
   }
 
-  Widget _customButton(IconData icon, String text) {
+  Widget _customButton({
+    required IconData icon,
+    required String text,
+    required VoidCallback onPressed,
+  }) {
     return SizedBox(
       width: double.infinity,
       height: 60,
@@ -73,7 +91,7 @@ class HomePage extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        onPressed: () {},
+        onPressed: onPressed,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -88,6 +106,68 @@ class HomePage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _handleCameraAction(BuildContext context) async {
+    try {
+      final status = await Permission.camera.request();
+      if (!status.isGranted) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Camera permission is required'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      final imageFile = await ImagePicker().pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85,
+        preferredCameraDevice: CameraDevice.rear,
+      );
+
+      if (imageFile != null && context.mounted) {
+        // TODO: Add your OCR processing logic here
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Captured image: ${imageFile.path}'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleUploadAction(BuildContext context) async {
+    // TODO: Implement upload functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Upload functionality coming soon!'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _handleTextTranslation(BuildContext context) async {
+    // TODO: Implement text translation
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Text translation coming soon!'),
+        duration: Duration(seconds: 2),
       ),
     );
   }
