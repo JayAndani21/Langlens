@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../pages/translation_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -28,7 +29,7 @@ class HomePage extends StatelessWidget {
           children: [
             _buildBannerSection(),
             const SizedBox(height: 30),
-            _buildActionButtons(),
+            _buildActionButtons(context), // Pass context to buttons
           ],
         ),
       ),
@@ -49,19 +50,31 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(BuildContext context) {
     return Column(
       children: [
-        _customButton(Icons.camera_alt_outlined, 'Capture Image'),
+        _customButton(
+          Icons.camera_alt_outlined, 
+          'Capture Image',
+          () => _navigateToCapture(context)
+        ),
         const SizedBox(height: 15),
-        _customButton(Icons.upload_outlined, 'Upload Image'),
+        _customButton(
+          Icons.upload_outlined, 
+          'Upload Image', 
+          () => _navigateToUpload(context)
+        ),
         const SizedBox(height: 15),
-        _customButton(Icons.translate, 'Text Translation'),
+        _customButton(
+          Icons.translate, 
+          'Text Translation', 
+          () => _navigateToTranslation(context),
+        ),
       ],
     );
   }
 
-  Widget _customButton(IconData icon, String text) {
+  Widget _customButton(IconData icon, String text, VoidCallback onPressed) {
     return SizedBox(
       width: double.infinity,
       height: 60,
@@ -73,7 +86,7 @@ class HomePage extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        onPressed: () {},
+        onPressed: onPressed, // Pass the navigation function here
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -89,6 +102,56 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  // Navigation Functions
+  void _navigateToCapture(BuildContext context) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => const CaptureScreen()), 
+  );
+}
+
+
+  void _navigateToUpload(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const UploadScreen()),
+    );
+  }
+
+  void _navigateToTranslation(BuildContext context) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => const TranslationPage()), // Ensure it's a StatefulWidget
+  );
+}
+
+}
+
+
+// Dummy Screens (Replace with actual screens)
+class CaptureScreen extends StatelessWidget {
+  const CaptureScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Capture Image")),
+      body: Center(child: Text("Camera functionality here")),
+    );
+  }
+}
+
+class UploadScreen extends StatelessWidget {
+  const UploadScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Upload Image")),
+      body: Center(child: Text("Upload functionality here")),
     );
   }
 }
