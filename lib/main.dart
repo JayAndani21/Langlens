@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/home_page.dart';
+import 'pages/loading_screen.dart'; // Import LoadingScreen
 
 void main() => runApp(const LangLensApp());
 
@@ -20,7 +20,7 @@ class LangLensApp extends StatelessWidget {
           iconTheme: IconThemeData(color: Colors.black),
         ),
       ),
-      home: const HomePage(),
+      home: const LoadingScreen(), // ✅ Set LoadingScreen as the first screen
     );
   }
 }
