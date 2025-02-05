@@ -1,6 +1,8 @@
+import 'dart:io'; // Add this import for File class
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'translation_page.dart'; // Import your friend's translation page
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -69,7 +71,7 @@ class HomePage extends StatelessWidget {
         _customButton(
           icon: Icons.translate,
           text: 'Text Translation',
-          onPressed: () => _handleTextTranslation(context),
+          onPressed: () => _navigateToTranslation(context),
         ),
       ],
     );
@@ -132,11 +134,11 @@ class HomePage extends StatelessWidget {
       );
 
       if (imageFile != null && context.mounted) {
-        // TODO: Add your OCR processing logic here
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Captured image: ${imageFile.path}'),
-            duration: const Duration(seconds: 2),
+        // Navigate to capture screen with the captured image
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CaptureScreen(imagePath: imageFile.path),
           ),
         );
       }
@@ -153,21 +155,92 @@ class HomePage extends StatelessWidget {
   }
 
   Future<void> _handleUploadAction(BuildContext context) async {
-    // TODO: Implement upload functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Upload functionality coming soon!'),
-        duration: Duration(seconds: 2),
+    try {
+      final imageFile = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+
+      if (imageFile != null && context.mounted) {
+        // Navigate to upload screen with selected image
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UploadScreen(imagePath: imageFile.path),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  void _navigateToTranslation(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const TranslationPage()),
+    );
+  }
+}
+
+// Updated Capture Screen with image display
+class CaptureScreen extends StatelessWidget {
+  final String imagePath;
+  const CaptureScreen({super.key, required this.imagePath});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Captured Image")),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.file(File(imagePath)), // Display the captured image
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                // Add OCR processing here
+              },
+              child: const Text('Process Text'),
+            ),
+          ],
+        ),
       ),
     );
   }
+}
 
-  Future<void> _handleTextTranslation(BuildContext context) async {
-    // TODO: Implement text translation
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Text translation coming soon!'),
-        duration: Duration(seconds: 2),
+// Updated Upload Screen with image display
+class UploadScreen extends StatelessWidget {
+  final String imagePath;
+  const UploadScreen({super.key, required this.imagePath});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Uploaded Image")),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.file(File(imagePath)), // Display the uploaded image
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                // Add processing logic here
+              },
+              child: const Text('Process Image'),
+            ),
+          ],
+        ),
       ),
     );
   }
