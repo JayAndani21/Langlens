@@ -227,17 +227,20 @@ class UploadScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Uploaded Image")),
-      body: Center(
+      body: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.file(File(imagePath)), // Display the uploaded image
-            const SizedBox(height: 20),
+            Image.file(File(imagePath)
+            ,height:650,
+            width: 700,
+            ), // Display the uploaded image
+            SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
                 // Add processing logic here
               },
-              child: const Text('Process Image'),
+              child: Text('Process Image'),
             ),
           ],
         ),
