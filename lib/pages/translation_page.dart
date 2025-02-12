@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+// import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class TranslationPage extends StatefulWidget {
@@ -19,7 +19,7 @@ class AppColors {
 
 class _TranslationPageState extends State<TranslationPage> {
   String _sourceLang = 'English';
-  String _targetLang = 'Gujarati';
+  String _targetLang = 'Hindi';
   final TextEditingController _sourceController = TextEditingController();
   final FocusNode _sourceFocus = FocusNode();
   String _translatedText = '';
@@ -89,12 +89,14 @@ class _TranslationPageState extends State<TranslationPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          
           _buildLanguageChip(_sourceLang, true),
           IconButton(
-            icon: const Icon(Icons.swap_horiz, size: 32),
+            icon: const Icon(Icons.swap_horiz, size: 24),
             onPressed: _swapLanguages,
           ),
           _buildLanguageChip(_targetLang, false),
+          Padding(padding: const EdgeInsets.all(8)),
         ],
       ),
     );
@@ -107,11 +109,11 @@ class _TranslationPageState extends State<TranslationPage> {
       },
       child: Row(
         children: [
-          SvgPicture.asset(
-            'assets/flags/${_getFlagCode(language)}.svg',
-            width: 32,
-            height: 32,
-          ),
+          // SvgPicture.asset(
+          //   'assets/flags/${_getFlagCode(language)}.svg',
+          //   width: 32,
+          //   height: 32,
+          // ),
           const SizedBox(width: 8),
           Text(
             language,
@@ -259,20 +261,20 @@ class _TranslationPageState extends State<TranslationPage> {
     );
   }
 
-  String _getFlagCode(String language) {
-    switch (language) {
-      case 'English':
-        return 'us';
-      case 'Gujarati':
-        return 'in';
-      case 'Hindi':
-        return 'in';
-      case 'French':
-        return 'fr';
-      case 'Spanish':
-        return 'es';
-      default:
-        return 'us';
-    }
-  }
+  // String _getFlagCode(String language) {
+  //   switch (language) {
+  //     case 'English':
+  //       return 'us';
+  //     case 'Gujarati':
+  //       return 'in';
+  //     case 'Hindi':
+  //       return 'in';
+  //     case 'French':
+  //       return 'fr';
+  //     case 'Spanish':
+  //       return 'es';
+  //     default:
+  //       return 'us';
+  //   }
+  // }
 }

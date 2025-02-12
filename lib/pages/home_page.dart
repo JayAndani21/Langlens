@@ -1,11 +1,43 @@
-import 'dart:io'; // Add this import for File class
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'translation_page.dart'; // Import your friend's translation page
+import 'login_page.dart';
+import 'translation_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  bool _isLoggedIn = false; // Track login state
+
+  void _handleLoginSuccess() {
+    setState(() {
+      _isLoggedIn = true; // User is now logged in
+    });
+  }
+
+  void _checkLogin(BuildContext context, VoidCallback onSuccess) {
+    if (_isLoggedIn) {
+      onSuccess(); // Proceed if logged in
+    } else {
+      // Show message and redirect to login
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in first!')),
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => LoginPage(onLoginSuccess: _handleLoginSuccess),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +54,14 @@ class HomePage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.person, size: 28),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LoginPage(onLoginSuccess: _handleLoginSuccess),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -59,19 +98,19 @@ class HomePage extends StatelessWidget {
         _customButton(
           icon: Icons.camera_alt_outlined,
           text: 'Capture Image',
-          onPressed: () => _handleCameraAction(context),
+          onPressed: () => _checkLogin(context, () => _handleCameraAction(context)),
         ),
         const SizedBox(height: 15),
         _customButton(
           icon: Icons.upload_outlined,
           text: 'Upload Image',
-          onPressed: () => _handleUploadAction(context),
+          onPressed: () => _checkLogin(context, () => _handleUploadAction(context)),
         ),
         const SizedBox(height: 15),
         _customButton(
           icon: Icons.translate,
           text: 'Text Translation',
-          onPressed: () => _navigateToTranslation(context),
+          onPressed: () => _checkLogin(context, () => _navigateToTranslation(context)),
         ),
       ],
     );
@@ -118,10 +157,7 @@ class HomePage extends StatelessWidget {
       if (!status.isGranted) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Camera permission is required'),
-              duration: Duration(seconds: 2),
-            ),
+            const SnackBar(content: Text('Camera permission is required')),
           );
         }
         return;
@@ -134,21 +170,15 @@ class HomePage extends StatelessWidget {
       );
 
       if (imageFile != null && context.mounted) {
-        // Navigate to capture screen with the captured image
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => CaptureScreen(imagePath: imageFile.path),
-          ),
+          MaterialPageRoute(builder: (context) => CaptureScreen(imagePath: imageFile.path)),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            duration: const Duration(seconds: 2),
-          ),
+          SnackBar(content: Text('Error: ${e.toString()}')),
         );
       }
     }
@@ -162,21 +192,15 @@ class HomePage extends StatelessWidget {
       );
 
       if (imageFile != null && context.mounted) {
-        // Navigate to upload screen with selected image
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => UploadScreen(imagePath: imageFile.path),
-          ),
+          MaterialPageRoute(builder: (context) => UploadScreen(imagePath: imageFile.path)),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            duration: const Duration(seconds: 2),
-          ),
+          SnackBar(content: Text('Error: ${e.toString()}')),
         );
       }
     }
@@ -190,7 +214,6 @@ class HomePage extends StatelessWidget {
   }
 }
 
-// Updated Capture Screen with image display
 class CaptureScreen extends StatelessWidget {
   final String imagePath;
   const CaptureScreen({super.key, required this.imagePath});
@@ -206,9 +229,7 @@ class CaptureScreen extends StatelessWidget {
             Image.file(File(imagePath)), // Display the captured image
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                // Add OCR processing here
-              },
+              onPressed: () {},
               child: const Text('Process Text'),
             ),
           ],
@@ -218,7 +239,6 @@ class CaptureScreen extends StatelessWidget {
   }
 }
 
-// Updated Upload Screen with image display
 class UploadScreen extends StatelessWidget {
   final String imagePath;
   const UploadScreen({super.key, required this.imagePath});
@@ -231,16 +251,15 @@ class UploadScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.file(File(imagePath)
-            ,height:650,
-            width: 700,
-            ), // Display the uploaded image
-            SizedBox(height: 20),
+            Image.file(
+              File(imagePath),
+              height: 650,
+              width: 700,
+            ),
+            const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                // Add processing logic here
-              },
-              child: Text('Process Image'),
+              onPressed: () {},
+              child: const Text('Process Image'),
             ),
           ],
         ),
