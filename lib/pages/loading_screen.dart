@@ -19,7 +19,7 @@ class LoadingScreenState extends State<LoadingScreen> {
       if (mounted) { // ✅ Check if widget is still in the widget tree
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
+          MaterialPageRoute(builder: (context) => HomePage(onLoginSuccess: () {  },)),
         );
       }
     });

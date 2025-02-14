@@ -1,8 +1,20 @@
 import 'package:flutter/material.dart';
-import 'pages/loading_screen.dart'; // Import LoadingScreen
-import 'pages/home_page.dart'; // Import HomePage (if needed for navigation)
+import 'package:langlens/pages/auth_service.dart';
+import 'package:provider/provider.dart';
+import 'pages/loading_screen.dart';
+import 'pages/home_page.dart';
+import 'pages/login_page.dart';
 
-void main() => runApp(const LangLensApp());
+void main() {
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AuthService()),
+      ],
+      child: const LangLensApp(),
+    ),
+  );
+}
 
 class LangLensApp extends StatelessWidget {
   const LangLensApp({super.key});
@@ -20,13 +32,17 @@ class LangLensApp extends StatelessWidget {
           elevation: 0,
           iconTheme: IconThemeData(color: Colors.black),
         ),
-        // Add more theme customizations if needed
       ),
-      // Set LoadingScreen as the first screen
       home: const LoadingScreen(),
-      // Define routes for navigation (optional)
-      routes: {
-        '/home': (context) => const HomePage(), // Add HomePage route
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/home':
+            return MaterialPageRoute(builder: (_) => HomePage(onLoginSuccess: () {}));
+          case '/login':
+            return MaterialPageRoute(builder: (_) => LoginPage(onLoginSuccess: () {}));
+          default:
+            return MaterialPageRoute(builder: (_) => const LoadingScreen());
+        }
       },
     );
   }

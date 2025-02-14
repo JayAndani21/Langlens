@@ -6,7 +6,9 @@ import 'login_page.dart';
 import 'translation_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, required this.onLoginSuccess}); 
+
+  final VoidCallback onLoginSuccess; 
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -27,13 +29,17 @@ class _HomePageState extends State<HomePage> {
     } else {
       // Show message and redirect to login
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please log in first!')),
+        const SnackBar(content: Text('Please login first!')),
       );
 
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => LoginPage(onLoginSuccess: _handleLoginSuccess),
+          builder: (context) => LoginPage(
+            onLoginSuccess: () {
+              
+            },
+          ),
         ),
       );
     }
@@ -58,7 +64,8 @@ class _HomePageState extends State<HomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => LoginPage(onLoginSuccess: _handleLoginSuccess),
+                  builder: (context) =>
+                      LoginPage(onLoginSuccess: _handleLoginSuccess),
                 ),
               );
             },
@@ -98,19 +105,22 @@ class _HomePageState extends State<HomePage> {
         _customButton(
           icon: Icons.camera_alt_outlined,
           text: 'Capture Image',
-          onPressed: () => _checkLogin(context, () => _handleCameraAction(context)),
+          onPressed: () =>
+              _checkLogin(context, () => _handleCameraAction(context)),
         ),
         const SizedBox(height: 15),
         _customButton(
           icon: Icons.upload_outlined,
           text: 'Upload Image',
-          onPressed: () => _checkLogin(context, () => _handleUploadAction(context)),
+          onPressed: () =>
+              _checkLogin(context, () => _handleUploadAction(context)),
         ),
         const SizedBox(height: 15),
         _customButton(
           icon: Icons.translate,
           text: 'Text Translation',
-          onPressed: () => _checkLogin(context, () => _navigateToTranslation(context)),
+          onPressed: () =>
+              _checkLogin(context, () => _navigateToTranslation(context)),
         ),
       ],
     );
@@ -172,7 +182,8 @@ class _HomePageState extends State<HomePage> {
       if (imageFile != null && context.mounted) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => CaptureScreen(imagePath: imageFile.path)),
+          MaterialPageRoute(
+              builder: (context) => CaptureScreen(imagePath: imageFile.path)),
         );
       }
     } catch (e) {
@@ -194,7 +205,8 @@ class _HomePageState extends State<HomePage> {
       if (imageFile != null && context.mounted) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => UploadScreen(imagePath: imageFile.path)),
+          MaterialPageRoute(
+              builder: (context) => UploadScreen(imagePath: imageFile.path)),
         );
       }
     } catch (e) {
