@@ -2,42 +2,48 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'login_page.dart';
 import 'translation_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.onLoginSuccess}); 
-
-  final VoidCallback onLoginSuccess; 
+  const HomePage({super.key, required Null Function() onLoginSuccess});
 
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  bool _isLoggedIn = false; // Track login state
+  String? _token;
 
-  void _handleLoginSuccess() {
+  @override
+  void initState() {
+    super.initState();
+    _loadToken(); // Load token on startup
+  }
+
+  Future<void> _loadToken() async {
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _isLoggedIn = true; // User is now logged in
+      _token = prefs.getString('token'); // Fetch stored token
     });
   }
 
   void _checkLogin(BuildContext context, VoidCallback onSuccess) {
-    if (_isLoggedIn) {
-      onSuccess(); // Proceed if logged in
+    if (_token != null) {
+      onSuccess(); // ✅ Proceed if token exists
     } else {
-      // Show message and redirect to login
+      // ❌ Show message and navigate to login page
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please login first!')),
       );
-
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => LoginPage(
-            onLoginSuccess: () {
-              
+            onLoginSuccess: () async {
+              await _loadToken(); // Reload token after login
+              setState(() {}); // Update UI
             },
           ),
         ),
@@ -64,8 +70,12 @@ class _HomePageState extends State<HomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      LoginPage(onLoginSuccess: _handleLoginSuccess),
+                  builder: (context) => LoginPage(
+                    onLoginSuccess: () async {
+                      await _loadToken();
+                      setState(() {});
+                    },
+                  ),
                 ),
               );
             },
