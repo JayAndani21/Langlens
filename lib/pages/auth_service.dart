@@ -7,7 +7,7 @@ import 'package:logger/logger.dart';
 class AuthService with ChangeNotifier {
   String? _token;
   String? get token => _token;
-  static const String _baseUrl = 'https://langlens-2.onrender.com';
+  static const String _baseUrl = 'http://10.0.2.2:5000';
   final Logger _logger = Logger();
 
   Future<void> signup(String name, String email, String password) async {
@@ -37,32 +37,45 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  Future<String?> login(String email, String password) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
-      );
+Future<String?> login(String email, String password) async {
+  try {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+      }),
+    );
 
-      final responseData = jsonDecode(response.body);
+    final responseData = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-        _token = responseData['token'];
-        await _saveToken();
-        notifyListeners();
-        return _token;
-      } else {
-        throw responseData['message'] ?? 'Login failed';
-      }
-    } catch (e) {
-      _logger.e('Login error: $e');
-      throw e.toString().replaceAll('Exception: ', '');
+    if (response.statusCode == 200) {
+      _token = responseData['token'];
+      await _saveUserData(responseData); // Save user data
+      notifyListeners();
+      return _token;
+    } else {
+      throw responseData['message'] ?? 'Login failed';
     }
+  } catch (e) {
+    _logger.e('Login error: $e');
+    throw e.toString().replaceAll('Exception: ', '');
   }
+}
+
+Future<void> _saveUserData(Map<String, dynamic> data) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('token', _token!);
+  
+  // Add null checks and explicit key names
+  await prefs.setString('name', data['name']?.toString() ?? 'No Name');
+  await prefs.setString('email', data['email']?.toString() ?? 'No Email');
+  
+  // For debugging
+  print('Saved User Data: ${data['name']}, ${data['email']}');
+}
+
 
   Future<bool> autoLogin() async {
     final prefs = await SharedPreferences.getInstance();
@@ -76,12 +89,12 @@ class AuthService with ChangeNotifier {
     return false;
   }
 
-  Future<void> logout() async {
-    _token = null;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-    notifyListeners();
-  }
+Future<void> logout() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+  _token = null;
+  notifyListeners();
+}
 
   Future<void> _saveToken() async {
     if (_token == null) return;

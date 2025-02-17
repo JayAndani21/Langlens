@@ -20,48 +20,52 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+ Future<void> _submit() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+  setState(() => _isLoading = true);
 
-    try {
-      final authService = Provider.of<AuthService>(context, listen: false);
-      final String? token = await authService.login(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
-      if (token != null) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', token); // Store token properly
-
-        if (mounted) {
-          widget.onLoginSuccess(); // Notify HomePage
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-                builder: (context) => HomePage(
-                      onLoginSuccess: () {},
-                    )),
-          ); // Close login page
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Invalid email or password')),
-          );
-        }
-      }
-    } catch (e) {
+  try {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final String? token = await authService.login(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+    );
+    
+    if (token != null) {
+      final prefs = await SharedPreferences.getInstance();
+      // Wait for AuthService to complete saving user data
+      await Future.delayed(const Duration(milliseconds: 100));
+      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+        widget.onLoginSuccess();
+        // Ensure HomePage reloads user data
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomePage(
+              onLoginSuccess: () {},
+            ),
+          ),
         );
       }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid email or password')),
+        );
+      }
     }
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+      );
+    }
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
   }
+}
 
   @override
   Widget build(BuildContext context) {

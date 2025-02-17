@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login_page.dart';
 import 'translation_page.dart';
+import 'profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required Null Function() onLoginSuccess});
@@ -65,21 +66,20 @@ class _HomePageState extends State<HomePage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person, size: 28),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => LoginPage(
-                    onLoginSuccess: () async {
-                      await _loadToken();
-                      setState(() {});
-                    },
-                  ),
-                ),
-              );
-            },
-          ),
+  icon: const Icon(Icons.person, size: 28),
+  onPressed: () {
+    _checkLogin(context, () {
+      // Navigate to Profile Page if logged in
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ProfilePage(),
+        ),
+      );
+    });
+  },
+),
+
         ],
       ),
       body: Padding(
