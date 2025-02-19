@@ -7,7 +7,7 @@ import 'package:logger/logger.dart';
 class AuthService with ChangeNotifier {
   String? _token;
   String? get token => _token;
-  static const String _baseUrl = 'http://10.0.2.2:5000';
+  static const String _baseUrl = 'http://172.19.65.143:5000';
   final Logger _logger = Logger();
 
   Future<void> signup(String name, String email, String password) async {
