@@ -24,14 +24,18 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("✅ MongoDB Connected"))
   .catch(err => console.log("❌ MongoDB Error:", err));
 
+
 // User Schema
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  resetToken: { type: String }, // For password reset
   resetPasswordOTP: String,
   resetPasswordExpire: Date
 });
+
+
 const User = mongoose.model("User", UserSchema);
 
 app.use(express.json());
@@ -40,6 +44,20 @@ app.use((req, res, next) => {
   console.log(`Received ${req.method} request for: ${req.url}`);
   next();
 });
+const verifyToken = (req, res, next) => {
+  const token = req.headers['authorization']?.split(' ')[1]; // Extract token from "Bearer <token>"
+  if (!token) {
+    return res.status(401).json({ message: "Access denied. No token provided." });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.userId; // Attach user ID to the request object
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid token." });
+  }
+};
 // 🔹 SIGNUP Route
 app.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
@@ -186,6 +204,83 @@ app.post("/resetpassword", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+// 🔹 DELETE Account Route
+app.delete("/user/delete", verifyToken, async (req, res) => {
+  try {
+    const userId = req.userId; // Extracted from the token in verifyToken middleware
+
+    // Find and delete the user
+    const deletedUser = await User.findByIdAndDelete(userId);
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    res.status(200).json({ message: "Account deleted successfully" });
+  } catch (err) {
+    console.error("Delete account error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+// 🔹 CHANGE PASSWORD Route
+app.post("/user/change-password", verifyToken, async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const userId = req.userId;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Old password is incorrect." });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (err) {
+    console.error("Change password error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// 🔹 CHANGE EMAIL Route
+app.post("/user/change-email", verifyToken, async (req, res) => {
+  const { newEmail, password } = req.body;
+  const userId = req.userId;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Password is incorrect." });
+    }
+
+    const existingUser = await User.findOne({ email: newEmail });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already exists. Please use a different email." });
+    }
+
+    user.email = newEmail;
+    await user.save();
+
+    res.status(200).json({ message: "Email updated successfully", email: newEmail });
+  } catch (err) {
+    console.error("Change email error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server running on port ${PORT}`));

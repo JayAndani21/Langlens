@@ -34,6 +34,7 @@ class _LoginPageState extends State<LoginPage> {
     );
     
     if (token != null) {
+    
       final prefs = await SharedPreferences.getInstance();
       // Wait for AuthService to complete saving user data
       await Future.delayed(const Duration(milliseconds: 100));

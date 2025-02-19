@@ -41,7 +41,7 @@ final otp = _otpControllers.map((c) => c.text).join();
 
   try {
     final response = await http.post(
-      Uri.parse('http://172.19.65.143:5000/verify-otp'),
+      Uri.parse('http://10.0.2.2:5000/verify-otp'),
       body: jsonEncode({'email': widget.email, 'otp': otp}),
       headers: {'Content-Type': 'application/json'},
     ).timeout(const Duration(seconds: 15));  

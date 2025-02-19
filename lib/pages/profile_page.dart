@@ -23,7 +23,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadThemePreference();
   }
 
-Future<void> _loadUserData() async {
+  Future<void> _loadUserData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       setState(() {
@@ -55,11 +55,192 @@ Future<void> _loadUserData() async {
   Future<void> _logout(BuildContext context) async {
     final authService = Provider.of<AuthService>(context, listen: false);
     await authService.logout();
-    
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => LoginPage(onLoginSuccess: () {}),
+      ),
+    );
+  }
+
+  Future<void> _deleteAccount(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Account'),
+        content: const Text(
+            'Are you sure you want to delete your account? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final authService = Provider.of<AuthService>(context, listen: false);
+        await authService.deleteAccount();
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LoginPage(onLoginSuccess: () {}),
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete account: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _showChangePasswordDialog(BuildContext context) async {
+    final oldPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Change Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: oldPasswordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Old Password',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: newPasswordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'New Password',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final oldPassword = oldPasswordController.text.trim();
+              final newPassword = newPasswordController.text.trim();
+
+              if (oldPassword.isEmpty || newPassword.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please fill in all fields')),
+                );
+                return;
+              }
+
+              try {
+                final authService =
+                    Provider.of<AuthService>(context, listen: false);
+                await authService.changePassword(oldPassword, newPassword);
+
+                Navigator.pop(context);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('Password changed successfully')),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to change password: $e')),
+                );
+              }
+            },
+            child: const Text('Change Password'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showChangeEmailDialog(BuildContext context) async {
+    final newEmailController = TextEditingController();
+    final passwordController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Change Email'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: newEmailController,
+              decoration: const InputDecoration(
+                labelText: 'New Email',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newEmail = newEmailController.text.trim();
+              final password = passwordController.text.trim();
+
+              if (newEmail.isEmpty || password.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please fill in all fields')),
+                );
+                return;
+              }
+
+              try {
+                final authService =
+                    Provider.of<AuthService>(context, listen: false);
+                await authService.changeEmail(newEmail, password);
+
+                Navigator.pop(context);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Email changed successfully')),
+                );
+
+                // Reload user data to reflect the new email
+                _loadUserData();
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to change email: $e')),
+                );
+              }
+            },
+            child: const Text('Change Email'),
+          ),
+        ],
       ),
     );
   }
@@ -91,7 +272,8 @@ Future<void> _loadUserData() async {
                     children: [
                       CircleAvatar(
                         radius: 30,
-                        backgroundColor: _isDarkMode ? Colors.grey[800] : Colors.white,
+                        backgroundColor:
+                            _isDarkMode ? Colors.grey[800] : Colors.white,
                         child: Icon(
                           Icons.person,
                           size: 40,
@@ -114,6 +296,7 @@ Future<void> _loadUserData() async {
                           Text(
                             _email ?? 'Loading...',
                             style: TextStyle(
+                              // ignore: deprecated_member_use
                               color: Colors.white.withOpacity(0.9),
                               fontSize: 14,
                             ),
@@ -147,17 +330,18 @@ Future<void> _loadUserData() async {
                         _buildAccountOption(
                           icon: Icons.email,
                           title: 'Change Email',
-                          onTap: () {},
+                          onTap: () => _showChangeEmailDialog(context),
+
                         ),
                         _buildAccountOption(
                           icon: Icons.lock,
                           title: 'Change Password',
-                          onTap: () {},
+                          onTap: ()=> _showChangePasswordDialog(context),
                         ),
                         _buildAccountOption(
                           icon: Icons.delete,
                           title: 'Delete Account',
-                          onTap: () {},
+                          onTap: () => _deleteAccount(context),
                         ),
                         _buildAccountOption(
                           icon: Icons.logout,
@@ -238,9 +422,9 @@ Future<void> _loadUserData() async {
           fontWeight: FontWeight.w500,
         ),
       ),
-      trailing: Icon(Icons.arrow_forward_ios, 
-                    size: 16, 
-                    color: _textColor.withOpacity(0.6)),
+      trailing: Icon(Icons.arrow_forward_ios,
+          // ignore: deprecated_member_use
+          size: 16, color: _textColor.withOpacity(0.6)),
       onTap: onTap,
       contentPadding: EdgeInsets.zero,
     );
@@ -267,9 +451,9 @@ Future<void> _loadUserData() async {
           fontWeight: FontWeight.w500,
         ),
       ),
-      trailing: Icon(Icons.arrow_forward_ios, 
-                    size: 16, 
-                    color: _textColor.withOpacity(0.6)),
+      trailing: Icon(Icons.arrow_forward_ios,
+          // ignore: deprecated_member_use
+          size: 16, color: _textColor.withOpacity(0.6)),
       onTap: onTap,
       contentPadding: EdgeInsets.zero,
     );

@@ -25,16 +25,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
       try {
         final response = await http.post(
-          Uri.parse('http://172.19.65.143:5000/forgotpassword'),
+          Uri.parse('http://10.0.2.2:5000/forgotpassword'),
            // Verify this URL
           body: jsonEncode({'email': _emailController.text.trim()}),
           headers: {'Content-Type': 'application/json'},
         ).timeout(const Duration(seconds: 10)); // Add timeout
-           final url = 'http://172.19.65.143:5000/forgotpassword';
-        print('URL DEBUG: ${url.codeUnits}');
-        print('Response status: ${response.statusCode}'); // Add logging
-        print('Response body: ${response.body}');
-
+         final url = 'http://10.0.2.2:5000/forgotpassword'; 
+      
         final responseData = jsonDecode(response.body);
 
         if (response.statusCode == 200) {
