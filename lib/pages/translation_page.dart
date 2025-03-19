@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter_svg/flutter_svg.dart';
+import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
 
 class TranslationPage extends StatefulWidget {
-  const TranslationPage({super.key});
+  final String initialText;
+  const TranslationPage({super.key, required this.initialText});
 
   @override
   State<TranslationPage> createState() => _TranslationPageState();
@@ -32,10 +34,51 @@ class _TranslationPageState extends State<TranslationPage> {
     });
   }
 
-  void _translateText() {
+  void _translateText() async {
+    if (_sourceController.text.isEmpty) {
+      return; // Prevent empty translation
+    }
+
     setState(() {
-      _translatedText = _sourceController.text; // Temporary mock translation
+      _translatedText = "Translating..."; // Show loading state
     });
+
+    try {
+      String targetLangCode = _getLanguageCode(_targetLang);
+      String translated = await translateGoogle(_sourceController.text, targetLangCode);
+
+      setState(() {
+        _translatedText = translated; // Display translated text
+      });
+    } catch (e) {
+      setState(() {
+        _translatedText = "Translation failed!"; // Handle error
+      });
+    }
+  }
+
+  Future<String> translateGoogle(String text, String targetLang) async {
+    final response = await http.get(
+      Uri.parse(
+        'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=$targetLang&dt=t&q=${Uri.encodeComponent(text)}'
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> translation = jsonDecode(response.body);
+      return translation[0][0][0]; // Extract translated text
+    } else {
+      throw Exception("Translation failed");
+    }
+  }
+
+  String _getLanguageCode(String language) {
+    Map<String, String> langMap = {
+      'English': 'en',
+      'Gujarati': 'gu',
+      'Hindi': 'hi',
+    };
+    return langMap[language] ?? 'en'; // Default to English
   }
 
   @override
@@ -89,7 +132,6 @@ class _TranslationPageState extends State<TranslationPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          
           _buildLanguageChip(_sourceLang, true),
           IconButton(
             icon: const Icon(Icons.swap_horiz, size: 24),
@@ -109,11 +151,6 @@ class _TranslationPageState extends State<TranslationPage> {
       },
       child: Row(
         children: [
-          // SvgPicture.asset(
-          //   'assets/flags/${_getFlagCode(language)}.svg',
-          //   width: 32,
-          //   height: 32,
-          // ),
           const SizedBox(width: 8),
           Text(
             language,
@@ -189,15 +226,9 @@ class _TranslationPageState extends State<TranslationPage> {
             controller: _sourceController,
             focusNode: _sourceFocus,
             maxLines: 4,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               border: InputBorder.none,
               hintText: 'Enter text to translate',
-              suffixIcon: _sourceFocus.hasFocus
-                  ? IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => _sourceController.clear(),
-                    )
-                  : null,
             ),
           ),
         ),
@@ -260,21 +291,4 @@ class _TranslationPageState extends State<TranslationPage> {
       ),
     );
   }
-
-  // String _getFlagCode(String language) {
-  //   switch (language) {
-  //     case 'English':
-  //       return 'us';
-  //     case 'Gujarati':
-  //       return 'in';
-  //     case 'Hindi':
-  //       return 'in';
-  //     case 'French':
-  //       return 'fr';
-  //     case 'Spanish':
-  //       return 'es';
-  //     default:
-  //       return 'us';
-  //   }
-  // }
 }

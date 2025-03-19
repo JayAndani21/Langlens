@@ -4,12 +4,14 @@ import 'package:provider/provider.dart';
 import 'pages/loading_screen.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
+import 'services/ocr_service.dart';
 
 void main() {
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => AuthService()),
+        Provider(create: (_) => OCRService()), 
       ],
       child: const LangLensApp(),
     ),
