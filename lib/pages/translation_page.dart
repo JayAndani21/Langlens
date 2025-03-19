@@ -26,6 +26,13 @@ class _TranslationPageState extends State<TranslationPage> {
   final FocusNode _sourceFocus = FocusNode();
   String _translatedText = '';
 
+  @override
+  void initState() {
+    super.initState();
+    _sourceController.text =
+        widget.initialText; // Set the initial OCR-selected text
+  }
+
   void _swapLanguages() {
     setState(() {
       final temp = _sourceLang;
@@ -45,7 +52,8 @@ class _TranslationPageState extends State<TranslationPage> {
 
     try {
       String targetLangCode = _getLanguageCode(_targetLang);
-      String translated = await translateGoogle(_sourceController.text, targetLangCode);
+      String translated =
+          await translateGoogle(_sourceController.text, targetLangCode);
 
       setState(() {
         _translatedText = translated; // Display translated text
@@ -60,13 +68,13 @@ class _TranslationPageState extends State<TranslationPage> {
   Future<String> translateGoogle(String text, String targetLang) async {
     final response = await http.get(
       Uri.parse(
-        'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=$targetLang&dt=t&q=${Uri.encodeComponent(text)}'
-      ),
+          'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=$targetLang&dt=t&q=${Uri.encodeComponent(text)}'),
     );
 
     if (response.statusCode == 200) {
       List<dynamic> translation = jsonDecode(response.body);
-      return translation[0][0][0]; // Extract translated text
+     return translation[0].map((item) => item[0]).join(' ');
+ // Extract translated text
     } else {
       throw Exception("Translation failed");
     }
